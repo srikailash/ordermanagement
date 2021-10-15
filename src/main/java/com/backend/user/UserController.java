@@ -13,16 +13,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRepository userRepository) {
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
 	public List<User> getUsers() {
 		// return "Hello World-1!!";
-        return userService.getUsers();
+        // return userService.getUsers();
+        return userRepository.listAllUsers();
 	}
 
 }
