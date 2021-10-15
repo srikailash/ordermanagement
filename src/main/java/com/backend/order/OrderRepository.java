@@ -1,14 +1,9 @@
 //handles implementation for JPA
+//handles all CRUD operations with mysql datastore
 package com.backend.order;
 
-import java.util.List;
- 
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
  
 public interface OrderRepository extends CrudRepository<Order, Long> {
-    @Query(
-        value = "SELECT * FROM Order", 
-        nativeQuery = true)
-    public List<Order> listAllOrders();
+
 }
