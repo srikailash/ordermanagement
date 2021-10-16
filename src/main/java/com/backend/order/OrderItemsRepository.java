@@ -4,6 +4,6 @@ package com.backend.order;
 
 import org.springframework.data.repository.CrudRepository;
  
-public interface OrderRepository extends CrudRepository<Order, Integer> {
+public interface OrderItemsRepository extends CrudRepository<OrderItems, Integer> {
 
 }

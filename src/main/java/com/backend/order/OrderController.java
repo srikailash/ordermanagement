@@ -31,6 +31,12 @@ public class OrderController {
 		return orderService.addOrder(order);
 	}
 
+	// Add new Order
+	@PostMapping(path="/place")
+	public @ResponseBody String placeNewOrder (@RequestBody Order order) {
+		return orderService.placeOrder(order);
+	}	
+
 	// Get all Orders
 	@GetMapping(path="/all")
 	public @ResponseBody Iterable<Order> getAllOrders() {
@@ -39,20 +45,20 @@ public class OrderController {
 
 	// Get single Order by Id
 	@GetMapping(path="/{id}")
-	public @ResponseBody Optional<Order> getOrderById(@PathVariable(name = "id") Long id) {
+	public @ResponseBody Optional<Order> getOrderById(@PathVariable(name = "id") Integer id) {
 		return orderService.getOrder(id);
 	}
 
 	// Update a Order
 	@PostMapping(path="/update/{id}")
-	public @ResponseBody String updateOrder(@PathVariable(name = "id") Long id, @RequestBody 
+	public @ResponseBody String updateOrder(@PathVariable(name = "id") Integer id, @RequestBody 
         Order order) {
         return orderService.updateOrder(id, order);
 	}
 
 	// Delete a Order
 	@DeleteMapping(path="/delete/{id}")
-	public @ResponseBody String deleteOrder(@PathVariable(name = "id") Long id) {
+	public @ResponseBody String deleteOrder(@PathVariable(name = "id") Integer id) {
 		// return studentService.deleteStudent(id);
         return orderService.deleteOrder(id);
 	}
