@@ -12,7 +12,6 @@ import javax.persistence.Table;
 
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 
 @Entity
 @Table(name = "Orders")

@@ -39,21 +39,29 @@ public class UserController {
 
 	// Get single user by Id
 	@GetMapping(path="/{id}")
-	public @ResponseBody Optional<User> getUserById(@PathVariable(name = "id") Long id) {
+	public @ResponseBody Optional<User> getUserById(@PathVariable(name = "id") Integer id) {
 		return userService.getUser(id);
 	}
 
 	// Update a user
 	@PostMapping(path="/update/{id}")
-	public @ResponseBody String updateUser(@PathVariable(name = "id") Long id, @RequestBody 
+	public @ResponseBody String updateUser(@PathVariable(name = "id") Integer id, @RequestBody 
         User user) {
         return userService.updateUser(id, user);
 	}
 
+	@PostMapping(path="/purchase/{id}")
+	public @ResponseBody Boolean userPurchase(@PathVariable(name = "id") Integer id, 
+	@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
+		System.out.println(payload.get("price"));
+        return userService.makePurchase(id, payload.get("price").doubleValue());
+	}	
+
 	// Delete a user
 	@DeleteMapping(path="/delete/{id}")
-	public @ResponseBody String deleteUser(@PathVariable(name = "id") Long id) {
+	public @ResponseBody String deleteUser(@PathVariable(name = "id") Integer id) {
 		// return studentService.deleteStudent(id);
         return userService.deleteUser(id);
 	}
 }
+

@@ -1,44 +1,51 @@
 //Entity that matches with mysql row of User table
 package com.backend.user;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+
 @Entity
-@Table
+@Table(name = "Users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    public String name;
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "balance")
+    private Double balance;
 
     public User() {
         //default constructor
     }
-
-    public User(String name) {
+    
+    public User(String name, Double balance) {
         this.name = name;
+        this.balance = balance;
     }
 
-	public Long getId() {
-		return id;
-	}
-
-    public void setId(Long id) {
-		this.id = id;
+	public Integer getId() {
+		return this.id;
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public Double getBalance() {
+		return this.balance;
+	}
+
+    public void setBalance(Double updatedBalance) {
+		this.balance = updatedBalance;
 	}
 
 }
