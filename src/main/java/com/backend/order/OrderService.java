@@ -32,14 +32,12 @@ public class OrderService {
 	public String placeOrder(Order order) {
 		try {
 
-			OrderItems orderItem1 = new OrderItems(1, 100L, 20, 200.0);
-			OrderItems orderItem2 = new OrderItems(1, 100L, 20, 200.0);
-			// Order order = new Order(123, 200.0);
+			OrderItems orderItem1 = new OrderItems(3, 100L, 20, 197.0);
+			OrderItems orderItem2 = new OrderItems(4, 100L, 20, 397.0);
 
-			orderItemsRepository.save(orderItem1);
+			orderItemsRepository.save(orderItem1);			
 			orderItemsRepository.save(orderItem2);
 
-			// orderRepository.save(order);
 			return "saved";
 		} catch(Exception e) {
 			return "failed";
@@ -83,3 +81,9 @@ public class OrderService {
 	}
 
 }
+
+
+
+
+
+

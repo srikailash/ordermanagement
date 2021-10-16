@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import javax.transaction.Transactional;
+
 @Service
 public class ProductService {
 
@@ -26,9 +28,8 @@ public class ProductService {
 	}
 
 	// Update a Product
-	public String updateProduct(Long id, Product product) {
+	public String updateProduct(Integer id, Product product) {
 		try {
-			product.setId(id);
 			productRepository.save(product);
 			return "Updated";
 		}catch(Exception e) {
@@ -36,18 +37,18 @@ public class ProductService {
 		}
 	}
 
-	// Get all students
+	// Get all products
 	public Iterable<Product> getAllProducts(){
 		return productRepository.findAll();
 	}
 
-	// Get single student by Id
-	public Optional<Product> getProduct(Long id) {
+	// Get single product by Id
+	public Optional<Product> getProduct( Integer id) {
 		return productRepository.findById(id);
 	}
 
 	// Delete a Student
-	public String deleteProduct(Long id) {
+	public String deleteProduct(Integer id) {
 		try{
 			productRepository.deleteById(id);
 			return "Deleted";
@@ -56,5 +57,56 @@ public class ProductService {
 		}
 	}
 
+	// Buying of product
+	@Transactional
+	public Double buyProduct(Integer id, Integer reqQuantity) {
+		try{
+			Optional<Product> optionalProduct = productRepository.findById(id);
+
+			if(optionalProduct.isPresent()) {
+
+				Product product = optionalProduct.get();
+				Integer availableQuantity = product.getQuantity();
+				if(availableQuantity > reqQuantity) {
+					product.setQuantity(availableQuantity - reqQuantity);
+					productRepository.save(product);
+				}
+				else {
+					System.out.println("Throwing product out of stock exception");
+					throw new Exception("Product out of stock");
+				}
+			}
+			else {
+				System.out.println("Product not present in inventory exception");
+				throw new Exception("Product not present");
+			}
+
+			return 100.0;
+		}catch(Exception e) {
+			return 0.0;
+		}
+	}
+
+
+	@Transactional
+	public Double addInventory(Integer id, Integer quantity) {
+		try{
+			Optional<Product> optionalProduct = productRepository.findById(id);
+
+			if(optionalProduct.isPresent()) {
+				Product product = optionalProduct.get();
+				Integer availableQuantity = product.getQuantity();
+				product.setQuantity(availableQuantity + quantity);
+				productRepository.save(product);
+			}
+			else {
+				System.out.println("Product not present in inventory exception");
+				throw new Exception("Product not present");
+			}
+			return 100.0;
+		}catch(Exception e) {
+			return 0.0;
+		}
+	}
 }
 

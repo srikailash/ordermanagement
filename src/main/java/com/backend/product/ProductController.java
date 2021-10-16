@@ -39,20 +39,34 @@ public class ProductController {
 
 	// Get single Product by Id
 	@GetMapping(path="/{id}")
-	public @ResponseBody Optional<Product> getProductById(@PathVariable(name = "id") Long id) {
+	public @ResponseBody Optional<Product> getProductById(@PathVariable(name = "id") Integer id) {
 		return productService.getProduct(id);
 	}
 
 	// Update a Product
 	@PostMapping(path="/update/{id}")
-	public @ResponseBody String updateProduct(@PathVariable(name = "id") Long id, @RequestBody 
+	public @ResponseBody String updateProduct(@PathVariable(name = "id") Integer id, @RequestBody 
         Product Product) {
         return productService.updateProduct(id, Product);
 	}
 
+    @PostMapping(value="/buy/{id}")
+    public void processBuy(@PathVariable(name = "id") Integer id,
+		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
+        System.out.println(payload.get("quantity"));
+		productService.buyProduct(id, payload.get("quantity").intValue());
+    }
+
+    @PostMapping(value="/stock/{id}")
+    public void processStock(@PathVariable(name = "id") Integer id,
+		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
+        System.out.println(payload.get("quantity"));
+		productService.addInventory(id, payload.get("quantity").intValue());
+    }	
+	
 	// Delete a Product
 	@DeleteMapping(path="/delete/{id}")
-	public @ResponseBody String deleteProduct(@PathVariable(name = "id") Long id) {
+	public @ResponseBody String deleteProduct(@PathVariable(name = "id") Integer id) {
 		// return studentService.deleteStudent(id);
         return productService.deleteProduct(id);
 	}

@@ -23,10 +23,10 @@ public class OrderItems {
     private Long productId;
 
     @Column(name = "quantity")
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "price")
-    private double price;
+    private Double price;
 
     @Column(name = "order_id")
     private Integer orderId;
@@ -39,10 +39,11 @@ public class OrderItems {
     private Order order;
 
     public OrderItems() {
-
+        System.out.println("Creating OrderItem with default constructor");
     }
 
-    public OrderItems(int orderId, Long productId, int quantity, double price) {
+    public OrderItems(Integer orderId, Long productId, Integer quantity, Double price) {
+        System.out.println("Creating OrderItem with " + orderId  + " and ProductId " + productId);
         this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;
@@ -53,11 +54,11 @@ public class OrderItems {
         return this.productId;
     }
     
-    public int getQuantity() {
+    public Integer getQuantity() {
         return this.quantity;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return this.price;
     }
     
