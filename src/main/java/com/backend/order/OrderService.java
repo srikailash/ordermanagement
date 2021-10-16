@@ -4,7 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
+import javax.transaction.Transactional;
+
+import com.backend.product.ProductService;
+import com.backend.user.UserService;
 
 @Service
 public class OrderService {
@@ -15,8 +21,21 @@ public class OrderService {
 	@Autowired
     private OrderItemsRepository orderItemsRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+	@Autowired
+	private final ProductService productService;
+
+	@Autowired
+	private final UserService userService;
+
+
+    public OrderService(OrderRepository orderRepository, 
+		OrderItemsRepository orderItemsRepository,
+		ProductService productService, 
+		UserService userService) {
         this.orderRepository = orderRepository;
+		this.orderItemsRepository = orderItemsRepository;
+		this.productService = productService;
+		this.userService = userService;
 	}
 
 	public String addOrder(Order order) {		
@@ -29,18 +48,14 @@ public class OrderService {
 		}
 	}
 
-	public String placeOrder(Order order) {
+	@Transactional
+	public String placeOrder() {
 		try {
-
-			OrderItems orderItem1 = new OrderItems(3, 100L, 20, 197.0);
-			OrderItems orderItem2 = new OrderItems(4, 100L, 20, 397.0);
-
-			orderItemsRepository.save(orderItem1);			
-			orderItemsRepository.save(orderItem2);
-
-			return "saved";
+			this.productService.buyProduct(6, 30);
+			this.userService.makePurchase(6, 23.0);
+			return "purchased with balance";
 		} catch(Exception e) {
-			return "failed";
+			return "failed with insufficient balance";
 		}
 	}
 
@@ -81,9 +96,3 @@ public class OrderService {
 	}
 
 }
-
-
-
-
-
-

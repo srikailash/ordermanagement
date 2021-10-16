@@ -34,7 +34,7 @@ public class OrderController {
 	// Add new Order
 	@PostMapping(path="/place")
 	public @ResponseBody String placeNewOrder (@RequestBody Order order) {
-		return orderService.placeOrder(order);
+		return orderService.placeOrder();
 	}	
 
 	// Get all Orders
