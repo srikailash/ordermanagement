@@ -6,10 +6,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
+
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 
 
 @Entity
 @Table(name = "Products")
+@OptimisticLocking(type=OptimisticLockType.VERSION)
 public class Product {
 
     @Id
@@ -24,6 +29,10 @@ public class Product {
 
     @Column(name = "price")
     private Double price;
+
+    @Version
+    @Column(name = "version")
+    private Integer version;
 
     public Product() {
         //default constructor
@@ -47,8 +56,21 @@ public class Product {
 		return this.quantity;
 	}
 
+	public Double getPrice() {
+		return this.price;
+	}
+
     public void setQuantity(Integer updatedQuantity) {
 		this.quantity = updatedQuantity;
 	}
+
+    public Integer getVersion() {
+        return this.version;
+      }
+    
+    public Product setVersion(Integer version) {
+        this.version = version;
+        return this;
+    }
 
 }

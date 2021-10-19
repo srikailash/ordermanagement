@@ -25,17 +25,24 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-	// Add new Order
-	@PostMapping(path="/add")
-	public @ResponseBody String addNewOrder (@RequestBody Order order) {
-		return orderService.addOrder(order);
-	}
+	// // Add new Order
+	// @PostMapping(path="/add")
+	// public @ResponseBody String addNewOrder (@RequestBody Order order) {
+	// 	return orderService.addOrder(order);
+	// }
 
 	// Add new Order
 	@PostMapping(path="/place")
-	public @ResponseBody String placeNewOrder (@RequestBody Order order) {
-		return orderService.placeOrder();
-	}	
+	public @ResponseBody String placeNewOrder (@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
+
+		System.out.println(payload);
+
+		return orderService.placeOrder(
+			payload.get("user_id").intValue(), 
+			payload.get("requested_quantity").intValue(), 
+			payload.get("product").intValue()
+		);
+	}
 
 	// Get all Orders
 	@GetMapping(path="/all")
@@ -49,17 +56,17 @@ public class OrderController {
 		return orderService.getOrder(id);
 	}
 
-	// Update a Order
-	@PostMapping(path="/update/{id}")
-	public @ResponseBody String updateOrder(@PathVariable(name = "id") Integer id, @RequestBody 
-        Order order) {
-        return orderService.updateOrder(id, order);
-	}
+	// // Update a Order
+	// @PostMapping(path="/update/{id}")
+	// public @ResponseBody String updateOrder(@PathVariable(name = "id") Integer id, @RequestBody 
+    //     Order order) {
+    //     return orderService.updateOrder(id, order);
+	// }
 
-	// Delete a Order
-	@DeleteMapping(path="/delete/{id}")
-	public @ResponseBody String deleteOrder(@PathVariable(name = "id") Integer id) {
-		// return studentService.deleteStudent(id);
-        return orderService.deleteOrder(id);
-	}
+	// // Delete a Order
+	// @DeleteMapping(path="/delete/{id}")
+	// public @ResponseBody String deleteOrder(@PathVariable(name = "id") Integer id) {
+	// 	// return studentService.deleteStudent(id);
+    //     return orderService.deleteOrder(id);
+	// }
 }

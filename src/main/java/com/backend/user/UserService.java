@@ -6,9 +6,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class UserService {
 
 	@Autowired
@@ -17,7 +18,7 @@ public class UserService {
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
 	}
-	
+
 	// Add new student
 	public String addUser(User user) {		
 		try {
@@ -58,7 +59,6 @@ public class UserService {
 		}
 	}
 
-	@Transactional
 	public Double getBalance(Integer id) {
 
 		Optional<User> optionalUser = userRepository.findById(id);
@@ -75,27 +75,31 @@ public class UserService {
 
 	}
 
-	@Transactional
-	public Boolean makePurchase(Integer id, Double price) {
+	public Boolean makePurchase(Integer id, Double price) throws Exception {
 
 		Optional<User> optionalUser = userRepository.findById(id);
 
 		if(optionalUser.isPresent()) {
+
 			User user = optionalUser.get();
 			Double balance = user.getBalance();
 
 			if(Double.compare(balance, price) > 0) {
 				user.setBalance(balance - price);
-				userRepository.save(user);
+				userRepository.saveAndFlush(user);
 				return true;
 			}
 			else {
 				System.out.println("Insufficient balance");
-				return false;
+				throw new Exception("Insufficient balance");
 			}
 
 		}
-		return false;
+		else {
+			//This is redundant check since headers are validated for userId authorization
+			throw new Exception("Problems connecting to userId");
+		}
+
 	}
 
 

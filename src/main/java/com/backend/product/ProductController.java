@@ -27,7 +27,7 @@ public class ProductController {
 
 	// Add new Product
 	@PostMapping(path="/add")
-	public @ResponseBody String addNewProduct (@RequestBody Product product) {
+	public @ResponseBody String addNewProduct (@RequestBody Product product) throws Exception {
 		return productService.addProduct(product);
 	}
 
@@ -52,7 +52,7 @@ public class ProductController {
 
     @PostMapping(value="/buy/{id}")
     public void processBuy(@PathVariable(name = "id") Integer id,
-		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
+		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
         System.out.println(payload.get("quantity"));
 		productService.buyProduct(id, payload.get("quantity").intValue());
     }

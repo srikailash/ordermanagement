@@ -4,14 +4,16 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.CascadeType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.backend.product.Product;
+import com.backend.user.User;
+
 import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "Orders")
@@ -30,24 +32,35 @@ public class Order {
     @Column(name = "total_price")
     private Double totalPrice;
 
-    @Column(name = "session_id")
-    private String sessionId;
+    @Column(name = "product_id")
+    private Integer productId;
 
-    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true)
-    @JoinColumn(name = "order_id",referencedColumnName = "id",insertable = false,updatable = false)
-    private List<OrderItems> orderItems;
+    @Column(name = "requested_quantity")
+    private Integer requestedQuantity;
 
-    // @ManyToOne(cascade = CascadeType.ALL)
-    // @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    // private User user;
+    @Column(name = "placed_quantity")
+    private Integer placedQuantity;
+
+    @Column(name = "status")
+    private String status;
+
+    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
+    @JoinColumn(name = "product_id",referencedColumnName = "id",insertable = false,updatable = false)
+    private Product product;
+
+    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
+    @JoinColumn(name = "user_id",referencedColumnName = "id",insertable = false,updatable = false)
+    private User user;
 
     public Order() {
     }
 
-    public Order(int userId, double totalPrice) {
+    public Order(Integer userId, Integer requestedQuantity,  Integer productId, String status) {
         this.userId = userId;
-        this.totalPrice = totalPrice;
-        this.sessionId = "session_id";
+        this.productId = productId;
+        this.requestedQuantity = requestedQuantity;
+        this.placedQuantity = 0;
+        this.status = status;
     }
 
     public Integer getId() {
@@ -62,12 +75,44 @@ public class Order {
         return this.totalPrice;
     }
 
-    public List<OrderItems> getOrderItems() {
-        // List<OrderItems> ret = new ArrayList<OrderItems>();
-        return this.orderItems;
+    public Integer getProductId() {
+        return this.productId;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setTotalPrice(Double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public void setPlacedQuantity(Integer placedQuantity) {
+        this.placedQuantity = placedQuantity;
+    }
+
+    public Integer getRequestedQuantity() {
+        return this.requestedQuantity;
+    }
+
+    public Integer getPlacedQuantity() {
+        return this.placedQuantity;
+    }
+    
+    public User getUser() {
+        return this.user;
+    }
+
+    public String getProductName() {
+        return this.product.getName();
+    }
+
+    public Double getProductPrice() {
+        return this.product.getPrice();
+    }
+
+    public String getStatus() {
+        return this.status;
     }
 
 }
-
-
-

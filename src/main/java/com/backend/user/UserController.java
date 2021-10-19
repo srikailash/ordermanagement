@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 @RestController
 @RequestMapping(path="api/v1/user")
@@ -52,7 +53,7 @@ public class UserController {
 
 	@PostMapping(path="/purchase/{id}")
 	public @ResponseBody Boolean userPurchase(@PathVariable(name = "id") Integer id, 
-	@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
+	@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
 		System.out.println(payload.get("price"));
         return userService.makePurchase(id, payload.get("price").doubleValue());
 	}	
@@ -63,5 +64,12 @@ public class UserController {
 		// return studentService.deleteStudent(id);
         return userService.deleteUser(id);
 	}
-}
 
+	@GetMapping("/get/{id}")
+	public Callable<Optional<User>> testTimeout(@PathVariable(name = "id") Integer id) {
+		return () -> {
+			return userService.getUser(id);
+		};
+	}
+
+}

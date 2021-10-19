@@ -1,13 +1,13 @@
 package com.backend.product;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class ProductService {
 
     @Autowired
@@ -17,8 +17,8 @@ public class ProductService {
         this.productRepository = productRepository;
 	}
 
-	// Add new student
-	public String addProduct(Product product) {		
+	// Add new product
+	public String addProduct(Product product) throws Exception {
 		try {
 			productRepository.save(product);
 			return "saved";
@@ -47,6 +47,19 @@ public class ProductService {
 		return productRepository.findById(id);
 	}
 
+	// Get single product by Id
+	public Double getPrice( Integer id) throws Exception{
+		Optional<Product> product =  productRepository.findById(id);
+
+		if(product.isPresent()) {
+			return product.get().getPrice();
+		}
+		else {
+			throw new Exception("Invalid product");
+		}
+
+	}
+	
 	// Delete a Student
 	public String deleteProduct(Integer id) {
 		try{
@@ -57,56 +70,52 @@ public class ProductService {
 		}
 	}
 
-	// Buying of product
-	@Transactional
-	public Double buyProduct(Integer id, Integer reqQuantity) {
-		try{
-			Optional<Product> optionalProduct = productRepository.findById(id);
+	public Integer buyProduct(Integer id, Integer reqQuantity) throws Exception{
 
-			if(optionalProduct.isPresent()) {
+		Optional<Product> optionalProduct = productRepository.findById(id);
+		if(optionalProduct.isPresent()) {
 
-				Product product = optionalProduct.get();
-				Integer availableQuantity = product.getQuantity();
-				if(availableQuantity > reqQuantity) {
-					product.setQuantity(availableQuantity - reqQuantity);
-					productRepository.save(product);
-				}
-				else {
-					System.out.println("Throwing product out of stock exception");
-					throw new Exception("Product out of stock");
-				}
+			Product product = optionalProduct.get();
+			Integer availableQuantity = product.getQuantity();
+
+			if(availableQuantity == 0) {
+				throw new Exception("Product out of stock");
+			}
+
+			if(availableQuantity > reqQuantity) {
+				product.setQuantity(availableQuantity - reqQuantity);
+				productRepository.saveAndFlush(product);
+				return reqQuantity;
 			}
 			else {
-				System.out.println("Product not present in inventory exception");
-				throw new Exception("Product not present");
+				//Partial fulfillment of the order
+				product.setQuantity(0);
+				productRepository.saveAndFlush(product);
+				return availableQuantity;
 			}
 
-			return 100.0;
-		}catch(Exception e) {
-			return 0.0;
 		}
+		else {
+			throw new Exception("Invalid product");
+		}
+
 	}
 
+	public void addInventory(Integer id, Integer quantity) throws Exception {
 
-	@Transactional
-	public Double addInventory(Integer id, Integer quantity) {
-		try{
-			Optional<Product> optionalProduct = productRepository.findById(id);
+		Optional<Product> optionalProduct = productRepository.findById(id);
 
-			if(optionalProduct.isPresent()) {
-				Product product = optionalProduct.get();
-				Integer availableQuantity = product.getQuantity();
-				product.setQuantity(availableQuantity + quantity);
-				productRepository.save(product);
-			}
-			else {
-				System.out.println("Product not present in inventory exception");
-				throw new Exception("Product not present");
-			}
-			return 100.0;
-		}catch(Exception e) {
-			return 0.0;
+		if(optionalProduct.isPresent()) {
+			Product product = optionalProduct.get();
+			Integer availableQuantity = product.getQuantity();
+			product.setQuantity(availableQuantity + quantity);
+			productRepository.saveAndFlush(product);
 		}
+		else {
+			System.out.println("Product not present in inventory exception");
+			throw new Exception("Product not present");
+		}
+
 	}
+
 }
-

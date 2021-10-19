@@ -7,10 +7,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
 
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 
 @Entity
 @Table(name = "Users")
+@OptimisticLocking(type=OptimisticLockType.VERSION)
 public class User {
 
     @Id
@@ -22,6 +26,13 @@ public class User {
 
     @Column(name = "balance")
     private Double balance;
+
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
+    // @Column(name = "status")
+    // private String status;
 
     public User() {
         //default constructor
