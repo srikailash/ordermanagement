@@ -27,6 +27,15 @@ public class User {
     @Column(name = "balance")
     private Double balance;
 
+    @Column(name = "address")
+    private String address;
+    
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "email")
+    private String email;    
+
     @Version
     @Column(name = "version")
     private Integer version;
@@ -51,6 +60,14 @@ public class User {
 		return this.name;
 	}
 
+	public String getPhone() {
+		return this.phone;
+	}
+
+	public String getEmail() {
+		return this.email;
+	}
+    
 	public Double getBalance() {
 		return this.balance;
 	}

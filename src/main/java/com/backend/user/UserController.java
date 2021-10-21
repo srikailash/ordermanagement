@@ -21,7 +21,7 @@ public class UserController {
 
     @Autowired
     private final UserService userService;
-    
+
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -50,13 +50,6 @@ public class UserController {
         User user) {
         return userService.updateUser(id, user);
 	}
-
-	@PostMapping(path="/purchase/{id}")
-	public @ResponseBody Boolean userPurchase(@PathVariable(name = "id") Integer id, 
-	@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
-		System.out.println(payload.get("price"));
-        return userService.makePurchase(id, payload.get("price").doubleValue());
-	}	
 
 	// Delete a user
 	@DeleteMapping(path="/delete/{id}")

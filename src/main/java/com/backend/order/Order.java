@@ -35,11 +35,8 @@ public class Order {
     @Column(name = "product_id")
     private Integer productId;
 
-    @Column(name = "requested_quantity")
-    private Integer requestedQuantity;
-
-    @Column(name = "placed_quantity")
-    private Integer placedQuantity;
+    @Column(name = "quantity")
+    private Integer quantity;
 
     @Column(name = "status")
     private String status;
@@ -58,8 +55,7 @@ public class Order {
     public Order(Integer userId, Integer requestedQuantity,  Integer productId, String status) {
         this.userId = userId;
         this.productId = productId;
-        this.requestedQuantity = requestedQuantity;
-        this.placedQuantity = 0;
+        this.quantity = 0;
         this.status = status;
     }
 
@@ -87,20 +83,16 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
-    public void setPlacedQuantity(Integer placedQuantity) {
-        this.placedQuantity = placedQuantity;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
-    public Integer getRequestedQuantity() {
-        return this.requestedQuantity;
+    public Integer getQuantity() {
+        return this.quantity;
     }
 
-    public Integer getPlacedQuantity() {
-        return this.placedQuantity;
-    }
-    
-    public User getUser() {
-        return this.user;
+    public String getUserName() {
+        return this.user.getName();
     }
 
     public String getProductName() {

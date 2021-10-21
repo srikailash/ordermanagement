@@ -1,15 +1,11 @@
 package com.backend.order;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Optional;
 
-import javax.persistence.OptimisticLockException;
 
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 
 import com.backend.product.ProductService;
 import com.backend.user.UserService;
@@ -17,16 +13,14 @@ import com.backend.user.UserService;
 @Service
 public class OrderService {
 
-	@Autowired
 	private final OrderRepository orderRepository;
 
-	@Autowired
 	private final ProductService productService;
 
-	@Autowired
 	private final UserService userService;
 
-    public OrderService(OrderRepository orderRepository, 
+    public OrderService(
+		OrderRepository orderRepository, 
 		ProductService productService, 
 		UserService userService) {
         this.orderRepository = orderRepository;
@@ -39,69 +33,55 @@ public class OrderService {
 			orderRepository.save(order);
 			return "saved";
 		} catch(Exception e) {
-			System.out.println(e.getMessage());
 			return "failed";
 		}
 	}
 
-	@Transactional
-	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
 	public String placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
 
-		//Let's make this step wise
 		//Step-1 : Input validations
-		//Step-2 : Initialize order - Creates new order request with status 'Received'
-		//Step-3 : Calls Product Inventory service to lock the inventory
-		//Step-4 : Calls user payment service to reduce balance
-		//Step-5 : saves and flushes order table
 
+		//step-2 begin Initialize order - Creates new order request with status 'Received'
 		Order order = new Order(userId, requestedQuantity, productId, "Received");
 		orderRepository.saveAndFlush(order);
-		Integer placedQuantity = 0;
-		Double productPrice = 0.0;
+		Double unitPrice = 0.0;
+		//step-2 end
 
 		try {
 
-			placedQuantity = this.productService.buyProduct(productId, requestedQuantity);
-			order.setPlacedQuantity(placedQuantity);
-			if(placedQuantity == requestedQuantity) {
-				order.setStatus("Requested quantity available and locked");
-			}
-			else {
-				order.setStatus("Partial quantity available and locked");
-			}
+			//step-3 begin : Calls Product Inventory service to lock the inventory
+			this.productService.buyProduct( order.getId(), userId, productId, requestedQuantity);
+			order.setStatus("Requested quantity locked");
 			orderRepository.saveAndFlush(order);
 
-			productPrice =  this.productService.getPrice(productId);
-			this.userService.makePurchase(userId, placedQuantity * productPrice);
-			order.setTotalPrice(placedQuantity * productPrice);
-			if(placedQuantity == requestedQuantity) {
-				order.setStatus("Requested quantity placed");
-			}
-			else {
-				order.setStatus("Partial quantity placed");
-			}
+			unitPrice =  this.productService.getPrice(productId);
+			//step-3 end
+
+			//step-4 begin Calls user payment service to reduce balance
+			this.userService.makePurchase(order.getId(), userId, productId, requestedQuantity * unitPrice);
+			order.setTotalPrice(requestedQuantity * unitPrice);
+			order.setQuantity(requestedQuantity);			
+			order.setStatus("Order completed");
 			orderRepository.saveAndFlush(order);
+			//step-4 end
 
 			return order.getStatus();
 		}
 		catch(Exception e) {
 
-			if(e.getMessage() == "Insufficient balance") {
-				//TODO: Let the user know how many units they can purchase with their current balance
-				//return back the inventory if there are problems changing balance
-				//TODO: Have auditor to make sure all locked inventory is returned
-				this.productService.addInventory(productId, placedQuantity);
-
-				//set placed quantity to 0
-				order.setPlacedQuantity(0);
+			if(order.getStatus() == "Requested quantity locked") {
+				//Rollback begin : Rollback locked inventory back to Product
+				this.productService.addInventory(productId, requestedQuantity);
+				order.setStatus("Insufficient balance");
+				//Rollback end
 			}
 
 			order.setStatus(e.getMessage());
 			orderRepository.saveAndFlush(order);
 
-			return e.getMessage();
+			throw e;
 		}
+
 	}
 
 	// Update a order
@@ -125,9 +105,12 @@ public class OrderService {
 		return orderRepository.findAll();
 	}
 
-	// Get single student by Id
-	public Optional<Order> getOrder(Integer id) {
-		return orderRepository.findById(id);
+	public Collection<Order> getOrderByOrderIdAndUserId(Integer orderId, Integer userId) throws Exception {
+		return orderRepository.findOrderFromUser(orderId, userId);
+	}
+
+	public Collection<Order> getOrdersByUserId(Integer userId) throws Exception {
+		return orderRepository.findOrdersFromUser(userId, 5, 5);
 	}
 
 	// Delete a Student

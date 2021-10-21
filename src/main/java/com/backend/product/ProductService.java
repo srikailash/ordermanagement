@@ -1,8 +1,14 @@
 package com.backend.product;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Optional;
+
+import javax.persistence.OptimisticLockException;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.annotation.Backoff;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,8 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProductService {
 
-    @Autowired
 	private final ProductRepository productRepository;
+
+	private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
@@ -70,17 +77,17 @@ public class ProductService {
 		}
 	}
 
-	public Integer buyProduct(Integer id, Integer reqQuantity) throws Exception{
+	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
+	public Integer buyProduct(Integer orderId, Integer userId, Integer productId, Integer reqQuantity) throws Exception{
 
-		Optional<Product> optionalProduct = productRepository.findById(id);
+		String logMessage = "productService.buyProduct request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " for quantity: " + reqQuantity.toString();
+		logger.info(logMessage);
+
+		Optional<Product> optionalProduct = productRepository.findById(productId);
 		if(optionalProduct.isPresent()) {
 
 			Product product = optionalProduct.get();
 			Integer availableQuantity = product.getQuantity();
-
-			if(availableQuantity == 0) {
-				throw new Exception("Product out of stock");
-			}
 
 			if(availableQuantity > reqQuantity) {
 				product.setQuantity(availableQuantity - reqQuantity);
@@ -88,19 +95,16 @@ public class ProductService {
 				return reqQuantity;
 			}
 			else {
-				//Partial fulfillment of the order
-				product.setQuantity(0);
-				productRepository.saveAndFlush(product);
-				return availableQuantity;
+				throw new Exception("Requested quantity is not available");
 			}
-
 		}
 		else {
-			throw new Exception("Invalid product");
+			throw new Exception("Product not found");
 		}
 
 	}
 
+	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
 	public void addInventory(Integer id, Integer quantity) throws Exception {
 
 		Optional<Product> optionalProduct = productRepository.findById(id);
@@ -112,10 +116,10 @@ public class ProductService {
 			productRepository.saveAndFlush(product);
 		}
 		else {
-			System.out.println("Product not present in inventory exception");
-			throw new Exception("Product not present");
+			throw new Exception("Product not found");
 		}
 
 	}
 
 }
+

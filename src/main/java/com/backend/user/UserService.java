@@ -1,19 +1,24 @@
 //Service has all the business logic
 package com.backend.user;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import javax.persistence.OptimisticLockException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class UserService {
 
-	@Autowired
 	private final UserRepository userRepository;
+
+	private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -59,7 +64,7 @@ public class UserService {
 		}
 	}
 
-	public Double getBalance(Integer id) {
+	public Double getBalance(Integer id) throws Exception {
 
 		Optional<User> optionalUser = userRepository.findById(id);
 
@@ -68,16 +73,18 @@ public class UserService {
 			return user.getBalance();
 		}
 		else {
-			System.out.println("Unknown user");
-			return 0.0;
-			// throw new Exception("user not found");
+			throw new Exception("user not found");
 		}
 
 	}
+	
+	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
+	public Boolean makePurchase(Integer orderId, Integer userId, Integer productId, Double price) throws Exception {
 
-	public Boolean makePurchase(Integer id, Double price) throws Exception {
+		Optional<User> optionalUser = userRepository.findById(userId);
 
-		Optional<User> optionalUser = userRepository.findById(id);
+		String logMessage = "userService.makePurchase request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " with price : " + price.toString();
+		logger.info(logMessage);
 
 		if(optionalUser.isPresent()) {
 
@@ -90,14 +97,13 @@ public class UserService {
 				return true;
 			}
 			else {
-				System.out.println("Insufficient balance");
 				throw new Exception("Insufficient balance");
 			}
 
 		}
 		else {
 			//This is redundant check since headers are validated for userId authorization
-			throw new Exception("Problems connecting to userId");
+			throw new Exception("User not found");
 		}
 
 	}

@@ -50,17 +50,9 @@ public class ProductController {
         return productService.updateProduct(id, Product);
 	}
 
-    @PostMapping(value="/buy/{id}")
-    public void processBuy(@PathVariable(name = "id") Integer id,
-		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
-        System.out.println(payload.get("quantity"));
-		productService.buyProduct(id, payload.get("quantity").intValue());
-    }
-
     @PostMapping(value="/stock/{id}")
     public void processStock(@PathVariable(name = "id") Integer id,
-		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) {
-        System.out.println(payload.get("quantity"));
+		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
 		productService.addInventory(id, payload.get("quantity").intValue());
     }	
 	
