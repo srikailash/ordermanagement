@@ -1,9 +1,13 @@
 package com.backend;
 
-import org.springframework.http.HttpStatus;
+import java.nio.file.AccessDeniedException;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import javassist.NotFoundException;
 
 public class ErrorResponse {
 
@@ -16,7 +20,7 @@ public class ErrorResponse {
         super();
 
         this.code = HttpStatus.INTERNAL_SERVER_ERROR;
-        this.devMessage = ex.getLocalizedMessage();
+        this.devMessage = ex.getMessage();
 
         //Client errors begin
         if(ex.getClass() == MethodArgumentTypeMismatchException.class) {
@@ -29,16 +33,17 @@ public class ErrorResponse {
             // this.userMessage = "Invalid request headers";
         }
 
-        if(ex.getMessage() == "Unauthorized access") {
-            this.code = HttpStatus.UNAUTHORIZED;
+        if(ex.getClass() == HttpRequestMethodNotSupportedException.class) {
+            this.code = HttpStatus.BAD_REQUEST;
         }
-
-        //Client errors end
-
-        //Server errors begin
-
-        //Server errors end
-
+        
+        if(ex.getClass() == AccessDeniedException.class) {
+            this.code = HttpStatus.BAD_REQUEST;
+        }
+        
+        if(ex.getClass() == NotFoundException.class) {
+            this.code = HttpStatus.BAD_REQUEST;
+        }
     }
 
     public String getDevMessage() {

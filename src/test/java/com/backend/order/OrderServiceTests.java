@@ -1,11 +1,19 @@
 package com.backend.order;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.internal.runners.statements.ExpectException;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import javassist.NotFoundException;
+
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import java.util.Date;
 
 import com.backend.product.ProductService;
@@ -31,6 +39,30 @@ public class OrderServiceTests {
 	@Mock
 	private OrderRepository orderRepository;
 
+	@Captor
+    ArgumentCaptor<Integer> orderIdArg;
+ 
+    @Captor
+    ArgumentCaptor<Integer> userIdArg;
+
+	@Captor
+	ArgumentCaptor<Integer> productIdArg;
+
+	@Captor
+	ArgumentCaptor<Integer> reqQuantityArg;
+
+	@Captor
+	ArgumentCaptor<Integer> userIdToUserServiceArg;
+	
+	@Captor
+	ArgumentCaptor<Integer> productIdToUserServiceArg;
+
+	@Captor
+	ArgumentCaptor<Double> priceArg;
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+	
 	@Before
 	public void init() {
 		orderService = new OrderService(orderRepository, productService, userService);
@@ -39,42 +71,63 @@ public class OrderServiceTests {
 	@Test
 	public void testPlaceOrderCompletely() throws Exception {
 
-		assertEquals("Order completed", orderService.placeOrder(20, 20, 20));
-    	// carService.schedulePickup(new Date(), new Route());
-    	// verify(rateFinder, times(1)).findBestRate(any(Route.class));
+		String orderResponse = orderService.placeOrder(123, 456, 789).getStatus();
+        Mockito.verify(productService, times(1))
+		.buyProduct(
+			orderIdArg.capture(),
+			userIdArg.capture(), 
+			productIdArg.capture(), 
+			reqQuantityArg.capture()
+		);
+	
+		assertEquals(userIdArg.getValue(), 123);
+		assertEquals(reqQuantityArg.getValue(), 456);
+		assertEquals(productIdArg.getValue(), 789);
+
+        Mockito.verify(userService, times(1))
+		.makePurchase(
+			orderIdArg.capture(),
+			userIdToUserServiceArg.capture(),
+			productIdToUserServiceArg.capture(),
+			priceArg.capture()
+		);
+
+		assertEquals(userIdToUserServiceArg.getValue(), 123);
+		assertEquals(productIdToUserServiceArg.getValue(), 789);
+
+		assertEquals("Order completed", orderResponse);
 	}
 
 	@Test
 	public void testRequestedStockNotAvailable() throws Exception {
-
-		assertEquals("Order completed", orderService.placeOrder(20, 20, 20));
-    	// carService.schedulePickup(new Date(), new Route());
-    	// verify(rateFinder, times(1)).findBestRate(any(Route.class));
+		expectedException.expect(NotFoundException.class);
+		expectedException.expectMessage("Requested quantity is not available");
+		when(productService.buyProduct(any(), any(), any(), any())).thenThrow(new NotFoundException("Requested quantity is not available"));
+		orderService.placeOrder(123, 456, 789).getStatus();
 	}
 
 	@Test
 	public void testNotEnoughBalanceWithUser() throws Exception {
-
-		//make sure the inventory is returned in this case
-		assertEquals("Order completed", orderService.placeOrder(20, 20, 20));
-    	// carService.schedulePickup(new Date(), new Route());
-    	// verify(rateFinder, times(1)).findBestRate(any(Route.class));
+		expectedException.expect(NotFoundException.class);
+		expectedException.expectMessage("Not enough balance");
+		when(userService.makePurchase(any(), any(), any(), any())).thenThrow(new NotFoundException("Not enough balance"));
+		orderService.placeOrder(123, 456, 789).getStatus();
 	}
 
 	@Test
-	public void testInvalidUserId() throws Exception {
+	public void testReturnLockedInventoryForNotEnoughBalance() throws Exception {
+		expectedException.expect(NotFoundException.class);
+		expectedException.expectMessage("Not enough balance");
 
-		assertEquals("Order completed", orderService.placeOrder(20, 20, 20));
-    	// carService.schedulePickup(new Date(), new Route());
-    	// verify(rateFinder, times(1)).findBestRate(any(Route.class));
+		when(userService.makePurchase(any(), any(), any(), any())).thenThrow(new NotFoundException("Not enough balance"));
+		orderService.placeOrder(123, 456, 789).getStatus();
+
+		Mockito.verify(productService, times(1))
+		.addInventory(
+			productIdArg.capture(),
+			reqQuantityArg.capture()
+		);
+		assertEquals(reqQuantityArg.getValue(), 456);
+		assertEquals(productIdArg.getValue(), 789);
 	}
-
-	@Test
-	public void testInvalidProductId() throws Exception {
-
-		assertEquals("Order completed", orderService.placeOrder(20, 20, 20));
-    	// carService.schedulePickup(new Date(), new Route());
-    	// verify(rateFinder, times(1)).findBestRate(any(Route.class));
-	}
-
 }

@@ -63,10 +63,6 @@ public class Product {
     public void setQuantity(Integer updatedQuantity) {
 		this.quantity = updatedQuantity;
 	}
-
-    public Integer getVersion() {
-        return this.version;
-      }
     
     public Product setVersion(Integer version) {
         this.version = version;

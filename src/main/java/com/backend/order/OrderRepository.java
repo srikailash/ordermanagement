@@ -14,7 +14,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query(value = "SELECT * FROM Orders WHERE id = :orderId AND user_id = :userId", nativeQuery = true)
     Collection<Order> findOrderFromUser(Integer orderId, Integer userId) throws Exception;
 
-    @Query(value="SELECT * FROM Orders WHERE user_id = :userId ORDER BY id offset :offset limit :limit", nativeQuery = true)
-    public Collection<Order> findOrdersFromUser(Integer userId, int offset, int limit);
+    @Query(value="SELECT * FROM Orders WHERE user_id = :userId limit :limit offset :offset", nativeQuery = true)
+    public Collection<Order> findOrdersFromUser(Integer userId, int limit, int offset);
 
+    @Query(value="SELECT * FROM Orders WHERE product_id = :productId limit :limit offset :offset", nativeQuery = true)
+    public Collection<Order> findOrdersForProduct(Integer productId, int limit, int offset);
 }

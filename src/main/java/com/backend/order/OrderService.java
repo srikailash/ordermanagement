@@ -3,9 +3,6 @@ package com.backend.order;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.Optional;
-
-
 
 import com.backend.product.ProductService;
 import com.backend.user.UserService;
@@ -37,9 +34,11 @@ public class OrderService {
 		}
 	}
 
-	public String placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
+	public Order placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
 
-		//Step-1 : Input validations
+		//Step-1 : begin Input validations
+		//Validations have been done in the controller
+		//Step-1 : end
 
 		//step-2 begin Initialize order - Creates new order request with status 'Received'
 		Order order = new Order(userId, requestedQuantity, productId, "Received");
@@ -65,7 +64,7 @@ public class OrderService {
 			orderRepository.saveAndFlush(order);
 			//step-4 end
 
-			return order.getStatus();
+			return order;
 		}
 		catch(Exception e) {
 
@@ -95,22 +94,16 @@ public class OrderService {
 		}
 	}
 
-	// Get all students
-	public Iterable<Order> getAllOrders(){
-		try {
-			orderRepository.findAll();
-		} catch(Exception e) {
-			System.out.println(e.getMessage());
-		}
-		return orderRepository.findAll();
-	}
-
 	public Collection<Order> getOrderByOrderIdAndUserId(Integer orderId, Integer userId) throws Exception {
 		return orderRepository.findOrderFromUser(orderId, userId);
 	}
 
-	public Collection<Order> getOrdersByUserId(Integer userId) throws Exception {
-		return orderRepository.findOrdersFromUser(userId, 5, 5);
+	public Collection<Order> getOrdersByUserId(Integer userId, Integer limit, Integer offset) throws Exception {
+		return orderRepository.findOrdersFromUser(userId, limit, offset);
+	}
+
+	public Collection<Order> getOrdersForProductId(Integer productId, Integer limit, Integer offset) throws Exception {
+		return orderRepository.findOrdersForProduct(productId, limit, offset);
 	}
 
 	// Delete a Student

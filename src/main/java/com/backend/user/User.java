@@ -76,4 +76,8 @@ public class User {
 		this.balance = updatedBalance;
 	}
 
+    public void setName(String newName) {
+		this.name = newName;
+	}
+
 }

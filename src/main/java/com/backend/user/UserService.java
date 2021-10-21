@@ -12,6 +12,8 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
+import javassist.NotFoundException;
+
 @Service
 @Transactional
 public class UserService {
@@ -44,6 +46,22 @@ public class UserService {
 		}
 	}
 
+	// Update a User
+	public void updateUserName(Integer id, String newName) throws Exception {
+		
+		Optional<User> optionalUser = userRepository.findById(id);
+
+		if(optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			user.setName(newName);
+			userRepository.saveAndFlush(user);
+		}
+		else {
+			throw new NotFoundException("User not found");
+		}
+		
+	}
+
 	// Get all students
 	public Iterable<User> getAllUsers(){
 		return userRepository.findAll();
@@ -73,7 +91,7 @@ public class UserService {
 			return user.getBalance();
 		}
 		else {
-			throw new Exception("user not found");
+			throw new NotFoundException("user not found");
 		}
 
 	}
@@ -97,16 +115,13 @@ public class UserService {
 				return true;
 			}
 			else {
-				throw new Exception("Insufficient balance");
+				//needs to be improved
+				throw new NotFoundException("Not enough balance");
 			}
-
 		}
 		else {
 			//This is redundant check since headers are validated for userId authorization
-			throw new Exception("User not found");
+			throw new NotFoundException("User not found");
 		}
-
 	}
-
-
 }

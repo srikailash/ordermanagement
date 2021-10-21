@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.persistence.OptimisticLockException;
@@ -11,6 +13,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.annotation.Backoff;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import javassist.NotFoundException;
 
 @Service
 @Transactional
@@ -49,9 +53,21 @@ public class ProductService {
 		return productRepository.findAll();
 	}
 
+	public Collection<Product> findProductsLike(String q, Integer limit, Integer offset) throws Exception{
+		return productRepository.findProductsLike(q, limit, offset);
+	}
+
 	// Get single product by Id
-	public Optional<Product> getProduct( Integer id) {
-		return productRepository.findById(id);
+	public Product findProductById( Integer id) throws Exception{
+		Optional<Product> optionalProduct =  productRepository.findById(id);
+
+		if(optionalProduct.isPresent()) {
+			return optionalProduct.get();
+		}
+		else {
+			throw new NotFoundException("Product not found");
+		}
+
 	}
 
 	// Get single product by Id
@@ -95,11 +111,11 @@ public class ProductService {
 				return reqQuantity;
 			}
 			else {
-				throw new Exception("Requested quantity is not available");
+				throw new NotFoundException("Requested quantity is not available");
 			}
 		}
 		else {
-			throw new Exception("Product not found");
+			throw new NotFoundException("Product not found");
 		}
 
 	}
@@ -116,7 +132,7 @@ public class ProductService {
 			productRepository.saveAndFlush(product);
 		}
 		else {
-			throw new Exception("Product not found");
+			throw new NotFoundException("Product not found");
 		}
 
 	}
