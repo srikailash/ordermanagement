@@ -5,6 +5,7 @@ import java.nio.file.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javassist.NotFoundException;
@@ -33,12 +34,16 @@ public class ErrorResponse {
             // this.userMessage = "Invalid request headers";
         }
 
+        if(ex.getClass() == MissingRequestHeaderException.class) {
+            this.code = HttpStatus.BAD_REQUEST;            
+        }
+
         if(ex.getClass() == HttpRequestMethodNotSupportedException.class) {
             this.code = HttpStatus.BAD_REQUEST;
         }
         
         if(ex.getClass() == AccessDeniedException.class) {
-            this.code = HttpStatus.BAD_REQUEST;
+            this.code = HttpStatus.UNAUTHORIZED;
         }
         
         if(ex.getClass() == NotFoundException.class) {

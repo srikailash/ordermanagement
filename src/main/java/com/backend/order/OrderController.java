@@ -74,7 +74,6 @@ public class OrderController {
 
 			Collection<Order> order = orderService.getOrderByOrderIdAndUserId(orderId, userId);
 			return new ResponseEntity<>(order, HttpStatus.OK);
-
 	}
 
 	//Get orders for a user

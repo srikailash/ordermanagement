@@ -4,14 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.OneToOne;
-import javax.persistence.CascadeType;
-import javax.persistence.JoinColumn;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import com.backend.product.Product;
-import com.backend.user.User;
 
 import java.util.Date;
 
@@ -40,14 +34,6 @@ public class Order {
 
     @Column(name = "status")
     private String status;
-
-    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
-    @JoinColumn(name = "product_id",referencedColumnName = "id",insertable = false,updatable = false)
-    private Product product;
-
-    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
-    @JoinColumn(name = "user_id",referencedColumnName = "id",insertable = false,updatable = false)
-    private User user;
 
     public Order() {
     }
@@ -89,18 +75,6 @@ public class Order {
 
     public Integer getQuantity() {
         return this.quantity;
-    }
-
-    public String getUserName() {
-        return this.user.getName();
-    }
-
-    public String getProductName() {
-        return this.product.getName();
-    }
-
-    public Double getProductPrice() {
-        return this.product.getPrice();
     }
 
     public String getStatus() {

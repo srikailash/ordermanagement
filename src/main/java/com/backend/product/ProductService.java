@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import javax.persistence.OptimisticLockException;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -93,13 +94,15 @@ public class ProductService {
 		}
 	}
 
-	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
+	//TODO: buyProduct shouldn't change inventory for the same orderId more than once
+	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Integer buyProduct(Integer orderId, Integer userId, Integer productId, Integer reqQuantity) throws Exception{
 
 		String logMessage = "productService.buyProduct request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " for quantity: " + reqQuantity.toString();
 		logger.info(logMessage);
 
 		Optional<Product> optionalProduct = productRepository.findById(productId);
+
 		if(optionalProduct.isPresent()) {
 
 			Product product = optionalProduct.get();

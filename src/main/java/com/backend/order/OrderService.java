@@ -1,5 +1,8 @@
 package com.backend.order;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -15,6 +18,8 @@ public class OrderService {
 	private final ProductService productService;
 
 	private final UserService userService;
+
+	private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     public OrderService(
 		OrderRepository orderRepository, 
@@ -34,24 +39,30 @@ public class OrderService {
 		}
 	}
 
+	//TODO: Retry for DataAccessException
 	public Order placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
 
 		//Step-1 : begin Input validations
 		//Validations have been done in the controller
 		//Step-1 : end
 
-		//step-2 begin Initialize order - Creates new order request with status 'Received'
+		Boolean inventoryLocked = false;
 		Order order = new Order(userId, requestedQuantity, productId, "Received");
-		orderRepository.saveAndFlush(order);
-		Double unitPrice = 0.0;
-		//step-2 end
 
 		try {
 
+			//step-2 begin : Creates new order entry with status 'Received'
+			orderRepository.saveAndFlush(order);
+			System.out.println("Reached to sleep for 10s");
+			Thread.sleep(10000);
+			Double unitPrice = 0.0;
+			//step-2 end
+
 			//step-3 begin : Calls Product Inventory service to lock the inventory
 			this.productService.buyProduct( order.getId(), userId, productId, requestedQuantity);
+			inventoryLocked = true;
 			order.setStatus("Requested quantity locked");
-			orderRepository.saveAndFlush(order);
+			// orderRepository.saveAndFlush(order);		//update to not make an extra call to mysql table
 
 			unitPrice =  this.productService.getPrice(productId);
 			//step-3 end
@@ -59,7 +70,7 @@ public class OrderService {
 			//step-4 begin Calls user payment service to reduce balance
 			this.userService.makePurchase(order.getId(), userId, productId, requestedQuantity * unitPrice);
 			order.setTotalPrice(requestedQuantity * unitPrice);
-			order.setQuantity(requestedQuantity);			
+			order.setQuantity(requestedQuantity);
 			order.setStatus("Order completed");
 			orderRepository.saveAndFlush(order);
 			//step-4 end
@@ -68,11 +79,19 @@ public class OrderService {
 		}
 		catch(Exception e) {
 
-			if(order.getStatus() == "Requested quantity locked") {
+			if(inventoryLocked == true) {
+
 				//Rollback begin : Rollback locked inventory back to Product
-				this.productService.addInventory(productId, requestedQuantity);
-				order.setStatus("Insufficient balance");
+				try {
+					this.productService.addInventory(productId, requestedQuantity);
+				}
+				catch(Exception rollbackException) {
+					//TODO: Following log message has to be monitored to not loose inventory
+					String logMessage = "orderService.addInventory request for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
+					logger.info(logMessage);
+				}
 				//Rollback end
+
 			}
 
 			order.setStatus(e.getMessage());

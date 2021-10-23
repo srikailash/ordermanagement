@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import javax.persistence.OptimisticLockException;
+
+import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,8 +97,9 @@ public class UserService {
 		}
 
 	}
-	
-	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
+
+	//TODO: makePurchase shouldn't reduce balance for the same orderId more than once
+	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Boolean makePurchase(Integer orderId, Integer userId, Integer productId, Double price) throws Exception {
 
 		Optional<User> optionalUser = userRepository.findById(userId);
@@ -124,4 +127,5 @@ public class UserService {
 			throw new NotFoundException("User not found");
 		}
 	}
+
 }

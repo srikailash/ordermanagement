@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -38,7 +40,14 @@ public class UserController {
 
 	// Get single user by Id
 	@GetMapping(path="/{id}")
-	public @ResponseBody Optional<User> getUserById(@PathVariable(name = "id") Integer id) {
+	public @ResponseBody Optional<User> getUserById(
+		@PathVariable(name = "id") Integer id,
+		@RequestHeader Integer userId) throws Exception {
+
+		if(userId != id) {
+			throw new AccessDeniedException("Unauthorized access");
+		}
+
 		return userService.getUser(id);
 	}
 
@@ -52,8 +61,13 @@ public class UserController {
 	@RequestMapping(value = "/update/{id}", method = RequestMethod.PUT)
 	public @ResponseBody String updateUser(
 		@PathVariable(name = "id") Integer id,
-		@RequestBody com.fasterxml.jackson.databind.JsonNode payload) throws Exception {
+		@RequestBody com.fasterxml.jackson.databind.JsonNode payload,
+		@RequestHeader Integer userId) throws Exception {
 		
+		if(userId != id) {
+			throw new AccessDeniedException("Unauthorized access");
+		}
+
 		userService.updateUserName(id, payload.get("name").textValue());
 		return "user name updated";
 	}
