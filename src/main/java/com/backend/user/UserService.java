@@ -12,12 +12,13 @@ import javax.persistence.OptimisticLockException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javassist.NotFoundException;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = DataAccessException.class)	//To make sure saveAndFlush is rolled back when there is exception. To check: Could be redundant if sql itself implements transaction.
 public class UserService {
 
 	private final UserRepository userRepository;
@@ -29,23 +30,15 @@ public class UserService {
 	}
 
 	// Add new student
-	public String addUser(User user) {		
-		try {
-			userRepository.save(user);
-			return "saved";
-		} catch(Exception e) {
-			return "failed";
-		}
+	public String addUser(User user) throws Exception {
+		userRepository.save(user);
+		return "saved";
 	}
 
 	// Update a User
-	public String updateUser(Integer id, User user) {
-		try {
-			userRepository.save(user);
-			return "Updated";
-		}catch(Exception e) {
-			return "Failed";
-		}
+	public String updateUser(Integer id, User user) throws Exception {
+		userRepository.save(user);
+		return "Updated";
 	}
 
 	// Update a User
@@ -98,10 +91,11 @@ public class UserService {
 
 	}
 
-	//TODO: makePurchase shouldn't reduce balance for the same orderId more than once
+	//TODO: makePurchase has to be idepotent i.e don't reduce balance more than once for the same orderId
 	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Boolean makePurchase(Integer orderId, Integer userId, Integer productId, Double price) throws Exception {
 
+		//With versioning of SQL rows there are no lost updates
 		Optional<User> optionalUser = userRepository.findById(userId);
 
 		String logMessage = "userService.makePurchase request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " with price : " + price.toString();
@@ -114,7 +108,7 @@ public class UserService {
 
 			if(Double.compare(balance, price) > 0) {
 				user.setBalance(balance - price);
-				userRepository.saveAndFlush(user);
+				userRepository.saveAndFlush(user);	//saveAndFlush allows values to be reflected to other transactions
 				return true;
 			}
 			else {

@@ -12,13 +12,13 @@ import javax.persistence.OptimisticLockException;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
-
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javassist.NotFoundException;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = DataAccessException.class)	//To make sure saveAndFlush is rolled back when there is exception. To check: Could be redundant if sql itself implements transaction.
 public class ProductService {
 
 	private final ProductRepository productRepository;
@@ -31,26 +31,18 @@ public class ProductService {
 
 	// Add new product
 	public String addProduct(Product product) throws Exception {
-		try {
-			productRepository.save(product);
-			return "saved";
-		} catch(Exception e) {
-			return "failed";
-		}
+		productRepository.save(product);
+		return "saved";
 	}
 
 	// Update a Product
 	public String updateProduct(Integer id, Product product) {
-		try {
-			productRepository.save(product);
-			return "Updated";
-		}catch(Exception e) {
-			return "Failed";
-		}
+		productRepository.save(product);
+		return "Updated";
 	}
 
 	// Get all products
-	public Iterable<Product> getAllProducts(){
+	public Iterable<Product> getAllProducts() throws Exception {
 		return productRepository.findAll();
 	}
 
@@ -85,19 +77,16 @@ public class ProductService {
 	}
 	
 	// Delete a Student
-	public String deleteProduct(Integer id) {
-		try{
-			productRepository.deleteById(id);
-			return "Deleted";
-		}catch(Exception e) {
-			return "Failed";
-		}
+	public String deleteProduct(Integer id) throws Exception{
+		productRepository.deleteById(id);
+		return "Deleted";
 	}
 
 	//TODO: buyProduct shouldn't change inventory for the same orderId more than once
 	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Integer buyProduct(Integer orderId, Integer userId, Integer productId, Integer reqQuantity) throws Exception{
 
+		//Equivalent of @Transactional(READ_COMMITTED)
 		String logMessage = "productService.buyProduct request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " for quantity: " + reqQuantity.toString();
 		logger.info(logMessage);
 
@@ -110,7 +99,7 @@ public class ProductService {
 
 			if(availableQuantity > reqQuantity) {
 				product.setQuantity(availableQuantity - reqQuantity);
-				productRepository.saveAndFlush(product);
+				productRepository.saveAndFlush(product);			//Persisting changes to DB row so other transactions read updated row
 				return reqQuantity;
 			}
 			else {

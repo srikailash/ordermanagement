@@ -34,7 +34,7 @@ public class UserController {
 
 	// Add new user
 	@PostMapping(path="/admin/add")
-	public @ResponseBody String addNewUser (@RequestBody User user) {
+	public @ResponseBody String addNewUser (@RequestBody User user) throws Exception {
 		return userService.addUser(user);
 	}
 
@@ -72,12 +72,12 @@ public class UserController {
 		return "user name updated";
 	}
 
-	@GetMapping("/get/{id}")
-	public Callable<Optional<User>> testTimeout(@PathVariable(name = "id") Integer id) {
-		return () -> {
-			return userService.getUser(id);
-		};
-	}
+	// @GetMapping("/get/{id}")
+	// public Callable<Optional<User>> testTimeout(@PathVariable(name = "id") Integer id) throws Exception {
+	// 	return () -> {
+	// 		return userService.getUser(id);
+	// 	};
+	// }
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<ErrorResponse> notFound(Exception ex){

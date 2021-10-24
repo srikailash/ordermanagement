@@ -40,7 +40,7 @@ public class ProductController {
 
 	// Get all Products
 	@GetMapping(path="/all")
-	public @ResponseBody Iterable<Product> getAllProducts() {
+	public @ResponseBody Iterable<Product> getAllProducts() throws Exception {
         return productService.getAllProducts();
 	}
 

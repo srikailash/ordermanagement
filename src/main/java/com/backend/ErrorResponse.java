@@ -10,6 +10,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import javassist.NotFoundException;
 
+/*
+Document possible Exceptions
+*/
+
 public class ErrorResponse {
 
     private String devMessage;

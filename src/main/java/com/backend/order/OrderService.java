@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.backend.product.ProductService;
 import com.backend.user.UserService;
@@ -30,16 +31,13 @@ public class OrderService {
 		this.userService = userService;
 	}
 
-	public String addOrder(Order order) {		
-		try {
-			orderRepository.save(order);
-			return "saved";
-		} catch(Exception e) {
-			return "failed";
-		}
+	public String addOrder(Order order) throws Exception {		
+		orderRepository.save(order);
+		return "";
 	}
 
 	//TODO: Retry for DataAccessException
+	//Reason for saving and flush changes is to make sure it's safe against failures
 	public Order placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
 
 		//Step-1 : begin Input validations
@@ -52,9 +50,7 @@ public class OrderService {
 		try {
 
 			//step-2 begin : Creates new order entry with status 'Received'
-			orderRepository.saveAndFlush(order);
-			System.out.println("Reached to sleep for 10s");
-			Thread.sleep(10000);
+			orderRepository.saveAndFlush(order);			//offloading id generation to mysql by persisting order to DB
 			Double unitPrice = 0.0;
 			//step-2 end
 
@@ -63,7 +59,6 @@ public class OrderService {
 			inventoryLocked = true;
 			order.setStatus("Requested quantity locked");
 			// orderRepository.saveAndFlush(order);		//update to not make an extra call to mysql table
-
 			unitPrice =  this.productService.getPrice(productId);
 			//step-3 end
 
@@ -79,6 +74,9 @@ public class OrderService {
 		}
 		catch(Exception e) {
 
+			String logMessage = "Following exception for orderService.placeOrder " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString() + " " + e.getMessage();
+			logger.info(logMessage);
+
 			if(inventoryLocked == true) {
 
 				//Rollback begin : Rollback locked inventory back to Product
@@ -87,15 +85,21 @@ public class OrderService {
 				}
 				catch(Exception rollbackException) {
 					//TODO: Following log message has to be monitored to not loose inventory
-					String logMessage = "orderService.addInventory request for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
+					logMessage = "orderService.addInventory request for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
 					logger.info(logMessage);
 				}
 				//Rollback end
 
 			}
 
-			order.setStatus(e.getMessage());
-			orderRepository.saveAndFlush(order);
+			try {
+				order.setStatus(e.getMessage());
+				orderRepository.saveAndFlush(order);
+			}
+			catch(Exception saveException) {
+				logMessage = "orderService.saveAndFlush order failed for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
+				logger.info(logMessage);
+			}
 
 			throw e;
 		}
