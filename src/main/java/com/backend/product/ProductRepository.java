@@ -10,5 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query(value="SELECT * FROM Products WHERE name like %:q% limit :limit offset :offset", nativeQuery = true)
-    public Collection<Product> findProductsLike(String q, int limit, int offset);    
+    public Collection<Product> findProductsLike(String q, int limit, int offset);
+
 }

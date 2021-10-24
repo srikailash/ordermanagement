@@ -86,7 +86,6 @@ public class ProductService {
 	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Integer buyProduct(Integer orderId, Integer userId, Integer productId, Integer reqQuantity) throws Exception{
 
-		//Equivalent of @Transactional(READ_COMMITTED)
 		String logMessage = "productService.buyProduct request for orderId : " + orderId.toString() + " productId : " + productId.toString() + " for quantity: " + reqQuantity.toString();
 		logger.info(logMessage);
 

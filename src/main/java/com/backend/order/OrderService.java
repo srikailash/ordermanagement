@@ -45,12 +45,15 @@ public class OrderService {
 		//Step-1 : end
 
 		Boolean inventoryLocked = false;
-		Order order = new Order(userId, requestedQuantity, productId, "Received");
+		Integer orderId = -1;
+		Order order = new Order(userId, requestedQuantity, productId, "Received");	//This has to be improved to use DAOs so it can be better tested
 
 		try {
 
 			//step-2 begin : Creates new order entry with status 'Received'
-			orderRepository.saveAndFlush(order);			//offloading id generation to mysql by persisting order to DB
+			// offloading id generation to mysql by persisting order to DB
+			orderRepository.saveAndFlush(order);			
+			orderId = order.getId();
 			Double unitPrice = 0.0;
 			//step-2 end
 
@@ -58,7 +61,6 @@ public class OrderService {
 			this.productService.buyProduct( order.getId(), userId, productId, requestedQuantity);
 			inventoryLocked = true;
 			order.setStatus("Requested quantity locked");
-			// orderRepository.saveAndFlush(order);		//update to not make an extra call to mysql table
 			unitPrice =  this.productService.getPrice(productId);
 			//step-3 end
 
@@ -74,7 +76,7 @@ public class OrderService {
 		}
 		catch(Exception e) {
 
-			String logMessage = "Following exception for orderService.placeOrder " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString() + " " + e.getMessage();
+			String logMessage = "Following exception for orderService.placeOrder " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString() + " " + e.getMessage();
 			logger.info(logMessage);
 
 			if(inventoryLocked == true) {
@@ -85,7 +87,7 @@ public class OrderService {
 				}
 				catch(Exception rollbackException) {
 					//TODO: Following log message has to be monitored to not loose inventory
-					logMessage = "orderService.addInventory request for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
+					logMessage = "orderService.addInventory request for orderId : " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
 					logger.info(logMessage);
 				}
 				//Rollback end
@@ -97,7 +99,7 @@ public class OrderService {
 				orderRepository.saveAndFlush(order);
 			}
 			catch(Exception saveException) {
-				logMessage = "orderService.saveAndFlush order failed for orderId : " + order.getId().toString() + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
+				logMessage = "orderService.saveAndFlush order failed for orderId : " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
 				logger.info(logMessage);
 			}
 

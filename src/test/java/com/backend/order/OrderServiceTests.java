@@ -31,7 +31,10 @@ public class OrderServiceTests {
 	private OrderService orderService;
 
 	@Mock
-	private ProductService productService;
+	private ProductService productService;	
+
+	@Mock
+	private Order order;
 
 	@Mock
 	private UserService userService;
