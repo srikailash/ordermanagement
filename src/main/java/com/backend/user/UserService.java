@@ -91,7 +91,7 @@ public class UserService {
 
 	}
 
-	//TODO: makePurchase has to be idepotent i.e don't reduce balance more than once for the same orderId
+	//TODO: makePurchase : should be Idempotent
 	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Boolean makePurchase(Integer orderId, Integer userId, Integer productId, Double price) throws Exception {
 
@@ -108,7 +108,7 @@ public class UserService {
 
 			if(Double.compare(balance, price) > 0) {
 				user.setBalance(balance - price);
-				userRepository.saveAndFlush(user);	//saveAndFlush allows values to be reflected to other transactions
+				userRepository.saveAndFlush(user);			//Persisting changes to DB row so other transactions read updated row
 				return true;
 			}
 			else {

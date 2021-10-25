@@ -36,7 +36,7 @@ public class ProductService {
 	}
 
 	// Update a Product
-	public String updateProduct(Integer id, Product product) {
+	public String updateProduct(Integer id, Product product) throws Exception {
 		productRepository.save(product);
 		return "Updated";
 	}
@@ -81,8 +81,8 @@ public class ProductService {
 		productRepository.deleteById(id);
 		return "Deleted";
 	}
-
-	//TODO: buyProduct shouldn't change inventory for the same orderId more than once
+	
+	//TODO: buyProduct : should be Idempotent
 	@Retryable(maxAttempts=3,value={OptimisticLockException.class, DataAccessException.class},backoff=@Backoff(delay = 2000))
 	public Integer buyProduct(Integer orderId, Integer userId, Integer productId, Integer reqQuantity) throws Exception{
 
@@ -111,6 +111,7 @@ public class ProductService {
 
 	}
 
+	//Rollback inventory : should be Idempotent
 	@Retryable(maxAttempts=3,value=OptimisticLockException.class,backoff=@Backoff(delay = 2000))
 	public void addInventory(Integer id, Integer quantity) throws Exception {
 

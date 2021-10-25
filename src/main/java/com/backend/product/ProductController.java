@@ -79,7 +79,7 @@ public class ProductController {
 	// Update a Product
 	@PostMapping(path="/update/{id}")
 	public @ResponseBody String updateProduct(@PathVariable(name = "id") Integer id, @RequestBody 
-        Product Product) {
+        Product Product) throws Exception {
         return productService.updateProduct(id, Product);
 	}
 

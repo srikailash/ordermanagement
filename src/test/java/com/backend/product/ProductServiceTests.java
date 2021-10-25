@@ -35,6 +35,9 @@ public class ProductServiceTests {
 	@Mock
 	private ProductRepository productRepository;
 
+	@Mock
+	private Product product;
+
 	@Before
 	public void init() {
 		productService = new ProductService(productRepository);
@@ -47,7 +50,7 @@ public class ProductServiceTests {
 	public void testBuyAvailableProduct() throws Exception {
 
 		//Product(name, availability, price)
-		Product product = new Product("abcd", 100, 10.0);
+		when(product.getQuantity()).thenReturn(100);
 		Optional<Product> optionalProduct = Optional.of(product);
 
 		when(productRepository.findById(any())).thenReturn(optionalProduct);
@@ -61,7 +64,7 @@ public class ProductServiceTests {
 		expectedException.expect(NotFoundException.class);
 		expectedException.expectMessage("Requested quantity is not available");
 
-		Product product = new Product("abcd", 8, 10.0);
+		when(product.getQuantity()).thenReturn(8);
 		Optional<Product> optionalProduct = Optional.of(product);
 
 		when(productRepository.findById(any())).thenReturn(optionalProduct);
@@ -83,7 +86,7 @@ public class ProductServiceTests {
 	public void testOptimisticLockException() throws Exception {
 		expectedException.expect(OptimisticLockException.class);
 
-		Product product = new Product("abcd", 100, 10.0);
+		when(product.getQuantity()).thenReturn(100);
 		Optional<Product> optionalProduct = Optional.of(product);
 
 		when(productRepository.findById(any())).thenReturn(optionalProduct);

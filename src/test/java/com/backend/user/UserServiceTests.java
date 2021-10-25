@@ -34,6 +34,9 @@ public class UserServiceTests {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private User user;
+
 	@Before
 	public void init() {
 		userService = new UserService(userRepository);
@@ -45,9 +48,9 @@ public class UserServiceTests {
 	@Test
 	public void testCompletePurchase() throws Exception {
 
-		User user = new User("abc", 100.0);
 		Optional<User> optionalUser = Optional.of(user);
 
+		when(user.getBalance()).thenReturn(10000.0);
 		when(userRepository.findById(any())).thenReturn(optionalUser);
 
 		assertEquals(true, userService.makePurchase(123, 4, 5, 10.0));
@@ -59,9 +62,8 @@ public class UserServiceTests {
 		expectedException.expect(NotFoundException.class);
 		expectedException.expectMessage("Not enough balance");
 
-		User user = new User("abc", 5.0);
+		when(user.getBalance()).thenReturn(10.0);
 		Optional<User> optionalUser = Optional.of(user);
-
 		when(userRepository.findById(any())).thenReturn(optionalUser);
 
 		userService.makePurchase(123, 4, 5, 10.0);

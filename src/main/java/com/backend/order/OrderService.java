@@ -36,6 +36,10 @@ public class OrderService {
 		return "";
 	}
 
+	//A - All or none transactions happen - YES - Inventory is rolled back when no balance is reduced
+	//C - One valid state to another  - YES - With read locks, there are no lost updates
+	//I - Concurrent transactions act as if they are serial - NO, one transaction can make another transaction fail/rollback
+	//D - NO, Mysql is a single point of failure for current system 
 	//TODO: Retry for DataAccessException
 	//Reason for saving and flush changes is to make sure it's safe against failures
 	public Order placeOrder(Integer userId, Integer requestedQuantity, Integer productId) throws Exception {
@@ -76,7 +80,7 @@ public class OrderService {
 		}
 		catch(Exception e) {
 
-			String logMessage = "Following exception for orderService.placeOrder " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString() + " " + e.getMessage();
+			String logMessage = "orderService.placeOrder " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString() + " " + e.getMessage();
 			logger.info(logMessage);
 
 			if(inventoryLocked == true) {
@@ -86,7 +90,7 @@ public class OrderService {
 					this.productService.addInventory(productId, requestedQuantity);
 				}
 				catch(Exception rollbackException) {
-					//TODO: Following log message has to be monitored to not loose inventory
+					//TODO: Following log message has to be carefully monitored to not loose inventory
 					logMessage = "orderService.addInventory request for orderId : " + orderId + " productId : " + productId.toString() + " for quantity: " + requestedQuantity.toString();
 					logger.info(logMessage);
 				}
@@ -109,14 +113,10 @@ public class OrderService {
 	}
 
 	// Update a order
-	public String updateOrder(Integer id, Order order) {
-		try {
+	public String updateOrder(Integer id, Order order) throws Exception {
 			// order.setId(id);
-			orderRepository.saveAndFlush(order);
-			return "Updated";
-		}catch(Exception e) {
-			return "Failed";
-		}
+		orderRepository.saveAndFlush(order);
+		return "Updated";
 	}
 
 	public Collection<Order> getOrderByOrderIdAndUserId(Integer orderId, Integer userId) throws Exception {
